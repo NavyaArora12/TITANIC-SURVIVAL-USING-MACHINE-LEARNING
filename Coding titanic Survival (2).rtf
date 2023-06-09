@@ -1,0 +1,671 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil\fcharset161 Calibri;}}
+{\*\generator Riched20 10.0.19041}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9 Titanic Survival Predictions (Beginner)\par
+I am a newbie to data science and machine learning, and will be attempting to work my way through the Titanic: Machine Learning from Disaster dataset. Please consider upvoting if this is useful to you! :)\par
+\par
+Contents:\par
+Import Necessary Libraries\par
+Read In and Explore the Data\par
+Data Analysis\par
+Data Visualization\par
+Cleaning Data\par
+Choosing the Best Model\par
+Creating Submission File\par
+Any and all feedback is welcome!\par
+\par
+add Codeadd Markdown\par
+1) Import Necessary Libraries\par
+First off, we need to import several Python libraries such as numpy, pandas, matplotlib and seaborn.\par
+\par
+add Codeadd Markdown\par
+#data analysis libraries \par
+import numpy as np\par
+import pandas as pd\par
+\u8203?\par
+#visualization libraries\par
+import matplotlib.pyplot as plt\par
+import seaborn as sns\par
+%matplotlib inline\par
+\u8203?\par
+#ignore warnings\par
+import warnings\par
+warnings.filterwarnings('ignore')\par
+add Codeadd Markdown\par
+2) Read in and Explore the Data\par
+It's time to read in our training and testing data using pd.read_csv, and take a first look at the training data using the describe() function.\par
+\par
+add Codeadd Markdown\par
+#import train and test CSV files\par
+train = pd.read_csv("../input/train.csv")\par
+test = pd.read_csv("../input/test.csv")\par
+\u8203?\par
+#take a look at the training data\par
+train.describe(include="all")\par
+PassengerId\tab Survived\tab Pclass\tab Name\tab Sex\tab Age\tab SibSp\tab Parch\tab Ticket\tab Fare\tab Cabin\tab Embarked\par
+count\tab 891.000000\tab 891.000000\tab 891.000000\tab 891\tab 891\tab 714.000000\tab 891.000000\tab 891.000000\tab 891\tab 891.000000\tab 204\tab 889\par
+unique\tab NaN\tab NaN\tab NaN\tab 891\tab 2\tab NaN\tab NaN\tab NaN\tab 681\tab NaN\tab 147\tab 3\par
+top\tab NaN\tab NaN\tab NaN\tab Mudd, Mr. Thomas Charles\tab male\tab NaN\tab NaN\tab NaN\tab 347082\tab NaN\tab C23 C25 C27\tab S\par
+freq\tab NaN\tab NaN\tab NaN\tab 1\tab 577\tab NaN\tab NaN\tab NaN\tab 7\tab NaN\tab 4\tab 644\par
+mean\tab 446.000000\tab 0.383838\tab 2.308642\tab NaN\tab NaN\tab 29.699118\tab 0.523008\tab 0.381594\tab NaN\tab 32.204208\tab NaN\tab NaN\par
+std\tab 257.353842\tab 0.486592\tab 0.836071\tab NaN\tab NaN\tab 14.526497\tab 1.102743\tab 0.806057\tab NaN\tab 49.693429\tab NaN\tab NaN\par
+min\tab 1.000000\tab 0.000000\tab 1.000000\tab NaN\tab NaN\tab 0.420000\tab 0.000000\tab 0.000000\tab NaN\tab 0.000000\tab NaN\tab NaN\par
+25%\tab 223.500000\tab 0.000000\tab 2.000000\tab NaN\tab NaN\tab 20.125000\tab 0.000000\tab 0.000000\tab NaN\tab 7.910400\tab NaN\tab NaN\par
+50%\tab 446.000000\tab 0.000000\tab 3.000000\tab NaN\tab NaN\tab 28.000000\tab 0.000000\tab 0.000000\tab NaN\tab 14.454200\tab NaN\tab NaN\par
+75%\tab 668.500000\tab 1.000000\tab 3.000000\tab NaN\tab NaN\tab 38.000000\tab 1.000000\tab 0.000000\tab NaN\tab 31.000000\tab NaN\tab NaN\par
+max\tab 891.000000\tab 1.000000\tab 3.000000\tab NaN\tab NaN\tab 80.000000\tab 8.000000\tab 6.000000\tab NaN\tab 512.329200\tab NaN\tab NaN\par
+add Codeadd Markdown\par
+3) Data Analysis\par
+We're going to consider the features in the dataset and how complete they are.\par
+\par
+add Codeadd Markdown\par
+#get a list of the features within the dataset\par
+print(train.columns)\par
+Index(['PassengerId', 'Survived', 'Pclass', 'Name', 'Sex', 'Age', 'SibSp',\par
+       'Parch', 'Ticket', 'Fare', 'Cabin', 'Embarked'],\par
+      dtype='object')\par
+add Codeadd Markdown\par
+#see a sample of the dataset to get an idea of the variables\par
+train.sample(5)\par
+PassengerId\tab Survived\tab Pclass\tab Name\tab Sex\tab Age\tab SibSp\tab Parch\tab Ticket\tab Fare\tab Cabin\tab Embarked\par
+162\tab 163\tab 0\tab 3\tab Bengtsson, Mr. John Viktor\tab male\tab 26.0\tab 0\tab 0\tab 347068\tab 7.7750\tab NaN\tab S\par
+15\tab 16\tab 1\tab 2\tab Hewlett, Mrs. (Mary D Kingcome)\tab female\tab 55.0\tab 0\tab 0\tab 248706\tab 16.0000\tab NaN\tab S\par
+625\tab 626\tab 0\tab 1\tab Sutton, Mr. Frederick\tab male\tab 61.0\tab 0\tab 0\tab 36963\tab 32.3208\tab D50\tab S\par
+321\tab 322\tab 0\tab 3\tab Danoff, Mr. Yoto\tab male\tab 27.0\tab 0\tab 0\tab 349219\tab 7.8958\tab NaN\tab S\par
+494\tab 495\tab 0\tab 3\tab Stanley, Mr. Edward Roland\tab male\tab 21.0\tab 0\tab 0\tab A/4 45380\tab 8.0500\tab NaN\tab S\par
+add Codeadd Markdown\par
+Numerical Features: Age (Continuous), Fare (Continuous), SibSp (Discrete), Parch (Discrete)\par
+Categorical Features: Survived, Sex, Embarked, Pclass\par
+Alphanumeric Features: Ticket, Cabin\par
+What are the data types for each feature?\par
+Survived: int\par
+Pclass: int\par
+Name: string\par
+Sex: string\par
+Age: float\par
+SibSp: int\par
+Parch: int\par
+Ticket: string\par
+Fare: float\par
+Cabin: string\par
+Embarked: string\par
+Now that we have an idea of what kinds of features we're working with, we can see how much information we have about each of them.\par
+\par
+add Codeadd Markdown\par
+#see a summary of the training dataset\par
+train.describe(include = "all")\par
+PassengerId\tab Survived\tab Pclass\tab Name\tab Sex\tab Age\tab SibSp\tab Parch\tab Ticket\tab Fare\tab Cabin\tab Embarked\par
+count\tab 891.000000\tab 891.000000\tab 891.000000\tab 891\tab 891\tab 714.000000\tab 891.000000\tab 891.000000\tab 891\tab 891.000000\tab 204\tab 889\par
+unique\tab NaN\tab NaN\tab NaN\tab 891\tab 2\tab NaN\tab NaN\tab NaN\tab 681\tab NaN\tab 147\tab 3\par
+top\tab NaN\tab NaN\tab NaN\tab Mudd, Mr. Thomas Charles\tab male\tab NaN\tab NaN\tab NaN\tab 347082\tab NaN\tab C23 C25 C27\tab S\par
+freq\tab NaN\tab NaN\tab NaN\tab 1\tab 577\tab NaN\tab NaN\tab NaN\tab 7\tab NaN\tab 4\tab 644\par
+mean\tab 446.000000\tab 0.383838\tab 2.308642\tab NaN\tab NaN\tab 29.699118\tab 0.523008\tab 0.381594\tab NaN\tab 32.204208\tab NaN\tab NaN\par
+std\tab 257.353842\tab 0.486592\tab 0.836071\tab NaN\tab NaN\tab 14.526497\tab 1.102743\tab 0.806057\tab NaN\tab 49.693429\tab NaN\tab NaN\par
+min\tab 1.000000\tab 0.000000\tab 1.000000\tab NaN\tab NaN\tab 0.420000\tab 0.000000\tab 0.000000\tab NaN\tab 0.000000\tab NaN\tab NaN\par
+25%\tab 223.500000\tab 0.000000\tab 2.000000\tab NaN\tab NaN\tab 20.125000\tab 0.000000\tab 0.000000\tab NaN\tab 7.910400\tab NaN\tab NaN\par
+50%\tab 446.000000\tab 0.000000\tab 3.000000\tab NaN\tab NaN\tab 28.000000\tab 0.000000\tab 0.000000\tab NaN\tab 14.454200\tab NaN\tab NaN\par
+75%\tab 668.500000\tab 1.000000\tab 3.000000\tab NaN\tab NaN\tab 38.000000\tab 1.000000\tab 0.000000\tab NaN\tab 31.000000\tab NaN\tab NaN\par
+max\tab 891.000000\tab 1.000000\tab 3.000000\tab NaN\tab NaN\tab 80.000000\tab 8.000000\tab 6.000000\tab NaN\tab 512.329200\tab NaN\tab NaN\par
+add Codeadd Markdown\par
+Some Observations:\par
+There are a total of 891 passengers in our training set.\par
+The Age feature is missing approximately 19.8% of its values. I'm guessing that the Age feature is pretty important to survival, so we should probably attempt to fill these gaps.\par
+The Cabin feature is missing approximately 77.1% of its values. Since so much of the feature is missing, it would be hard to fill in the missing values. We'll probably drop these values from our dataset.\par
+The Embarked feature is missing 0.22% of its values, which should be relatively harmless.\par
+add Codeadd Markdown\par
+#check for any other unusable values\par
+print(pd.isnull(train).sum())\par
+PassengerId      0\par
+Survived         0\par
+Pclass           0\par
+Name             0\par
+Sex              0\par
+Age            177\par
+SibSp            0\par
+Parch            0\par
+Ticket           0\par
+Fare             0\par
+Cabin          687\par
+Embarked         2\par
+dtype: int64\par
+add Codeadd Markdown\par
+We can see that except for the abovementioned missing values, no NaN values exist.\par
+\par
+add Codeadd Markdown\par
+Some Predictions:\par
+Sex: Females are more likely to survive.\par
+SibSp/Parch: People traveling alone are more likely to survive.\par
+Age: Young children are more likely to survive.\par
+Pclass: People of higher socioeconomic class are more likely to survive.\par
+add Codeadd Markdown\par
+4) Data Visualization\par
+It's time to visualize our data so we can see whether our predictions were accurate!\par
+\par
+add Codeadd Markdown\par
+Sex Feature\par
+add Codeadd Markdown\par
+#draw a bar plot of survival by sex\par
+sns.barplot(x="Sex", y="Survived", data=train)\par
+\u8203?\par
+#print percentages of females vs. males that survive\par
+print("Percentage of females who survived:", train["Survived"][train["Sex"] == 'female'].value_counts(normalize = True)[1]*100)\par
+\u8203?\par
+print("Percentage of males who survived:", train["Survived"][train["Sex"] == 'male'].value_counts(normalize = True)[1]*100)\par
+Percentage of females who survived: 74.20382165605095\par
+Percentage of males who survived: 18.890814558058924\par
+\par
+add Codeadd Markdown\par
+As predicted, females have a much higher chance of survival than males. The Sex feature is essential in our predictions.\par
+\par
+add Codeadd Markdown\par
+Pclass Feature\par
+add Codeadd Markdown\par
+#draw a bar plot of survival by Pclass\par
+sns.barplot(x="Pclass", y="Survived", data=train)\par
+\u8203?\par
+#print percentage of people by Pclass that survived\par
+print("Percentage of Pclass = 1 who survived:", train["Survived"][train["Pclass"] == 1].value_counts(normalize = True)[1]*100)\par
+\u8203?\par
+print("Percentage of Pclass = 2 who survived:", train["Survived"][train["Pclass"] == 2].value_counts(normalize = True)[1]*100)\par
+\u8203?\par
+print("Percentage of Pclass = 3 who survived:", train["Survived"][train["Pclass"] == 3].value_counts(normalize = True)[1]*100)\par
+Percentage of Pclass = 1 who survived: 62.96296296296296\par
+Percentage of Pclass = 2 who survived: 47.28260869565217\par
+Percentage of Pclass = 3 who survived: 24.236252545824847\par
+\par
+add Codeadd Markdown\par
+As predicted, people with higher socioeconomic class had a higher rate of survival. (62.9% vs. 47.3% vs. 24.2%)\par
+\par
+add Codeadd Markdown\par
+SibSp Feature\par
+add Codeadd Markdown\par
+#draw a bar plot for SibSp vs. survival\par
+sns.barplot(x="SibSp", y="Survived", data=train)\par
+\u8203?\par
+#I won't be printing individual percent values for all of these.\par
+print("Percentage of SibSp = 0 who survived:", train["Survived"][train["SibSp"] == 0].value_counts(normalize = True)[1]*100)\par
+\u8203?\par
+print("Percentage of SibSp = 1 who survived:", train["Survived"][train["SibSp"] == 1].value_counts(normalize = True)[1]*100)\par
+\u8203?\par
+print("Percentage of SibSp = 2 who survived:", train["Survived"][train["SibSp"] == 2].value_counts(normalize = True)[1]*100)\par
+Percentage of SibSp = 0 who survived: 34.53947368421053\par
+Percentage of SibSp = 1 who survived: 53.588516746411486\par
+Percentage of SibSp = 2 who survived: 46.42857142857143\par
+\par
+add Codeadd Markdown\par
+In general, it's clear that people with more siblings or spouses aboard were less likely to survive. However, contrary to expectations, people with no siblings or spouses were less to likely to survive than those with one or two. (34.5% vs 53.4% vs. 46.4%)\par
+\par
+add Codeadd Markdown\par
+Parch Feature\par
+add Codeadd Markdown\par
+#draw a bar plot for Parch vs. survival\par
+sns.barplot(x="Parch", y="Survived", data=train)\par
+plt.show()\par
+\par
+add Codeadd Markdown\par
+People with less than four parents or children aboard are more likely to survive than those with four or more. Again, people traveling alone are less likely to survive than those with 1-3 parents or children.\par
+\par
+add Codeadd Markdown\par
+Age Feature\par
+add Codeadd Markdown\par
+#sort the ages into logical categories\par
+train["Age"] = train["Age"].fillna(-0.5)\par
+test["Age"] = test["Age"].fillna(-0.5)\par
+bins = [-1, 0, 5, 12, 18, 24, 35, 60, np.inf]\par
+labels = ['Unknown', 'Baby', 'Child', 'Teenager', 'Student', 'Young Adult', 'Adult', 'Senior']\par
+train['AgeGroup'] = pd.cut(train["Age"], bins, labels = labels)\par
+test['AgeGroup'] = pd.cut(test["Age"], bins, labels = labels)\par
+\u8203?\par
+#draw a bar plot of Age vs. survival\par
+sns.barplot(x="AgeGroup", y="Survived", data=train)\par
+plt.show()\par
+\par
+add Codeadd Markdown\par
+Babies are more likely to survive than any other age group.\par
+\par
+add Codeadd Markdown\par
+Cabin Feature\par
+I think the idea here is that people with recorded cabin numbers are of higher socioeconomic class, and thus more likely to survive. Thanks for the tips, @salvus82 and Daniel Ellis!\par
+\par
+add Codeadd Markdown\par
+train["CabinBool"] = (train["Cabin"].notnull().astype('int'))\par
+test["CabinBool"] = (test["Cabin"].notnull().astype('int'))\par
+\u8203?\par
+#calculate percentages of CabinBool vs. survived\par
+print("Percentage of CabinBool = 1 who survived:", train["Survived"][train["CabinBool"] == 1].value_counts(normalize = True)[1]*100)\par
+\u8203?\par
+print("Percentage of CabinBool = 0 who survived:", train["Survived"][train["CabinBool"] == 0].value_counts(normalize = True)[1]*100)\par
+#draw a bar plot of CabinBool vs. survival\par
+sns.barplot(x="CabinBool", y="Survived", data=train)\par
+plt.show()\par
+Percentage of CabinBool = 1 who survived: 66.66666666666666\par
+Percentage of CabinBool = 0 who survived: 29.985443959243085\par
+\par
+add Codeadd Markdown\par
+People with a recorded Cabin number are, in fact, more likely to survive. (66.6% vs 29.9%)\par
+\par
+add Codeadd Markdown\par
+5) Cleaning Data\par
+Time to clean our data to account for missing values and unnecessary information!\par
+\par
+add Codeadd Markdown\par
+Looking at the Test Data\par
+Let's see how our test data looks!\par
+\par
+add Codeadd Markdown\par
+test.describe(include="all")\par
+PassengerId\tab Pclass\tab Name\tab Sex\tab Age\tab SibSp\tab Parch\tab Ticket\tab Fare\tab Cabin\tab Embarked\tab AgeGroup\tab CabinBool\par
+count\tab 418.000000\tab 418.000000\tab 418\tab 418\tab 418.000000\tab 418.000000\tab 418.000000\tab 418\tab 417.000000\tab 91\tab 418\tab 418\tab 418.000000\par
+unique\tab NaN\tab NaN\tab 418\tab 2\tab NaN\tab NaN\tab NaN\tab 363\tab NaN\tab 76\tab 3\tab 8\tab NaN\par
+top\tab NaN\tab NaN\tab Angheloff, Mr. Minko\tab male\tab NaN\tab NaN\tab NaN\tab PC 17608\tab NaN\tab B57 B59 B63 B66\tab S\tab Young Adult\tab NaN\par
+freq\tab NaN\tab NaN\tab 1\tab 266\tab NaN\tab NaN\tab NaN\tab 5\tab NaN\tab 3\tab 270\tab 96\tab NaN\par
+mean\tab 1100.500000\tab 2.265550\tab NaN\tab NaN\tab 23.941388\tab 0.447368\tab 0.392344\tab NaN\tab 35.627188\tab NaN\tab NaN\tab NaN\tab 0.217703\par
+std\tab 120.810458\tab 0.841838\tab NaN\tab NaN\tab 17.741080\tab 0.896760\tab 0.981429\tab NaN\tab 55.907576\tab NaN\tab NaN\tab NaN\tab 0.413179\par
+min\tab 892.000000\tab 1.000000\tab NaN\tab NaN\tab -0.500000\tab 0.000000\tab 0.000000\tab NaN\tab 0.000000\tab NaN\tab NaN\tab NaN\tab 0.000000\par
+25%\tab 996.250000\tab 1.000000\tab NaN\tab NaN\tab 9.000000\tab 0.000000\tab 0.000000\tab NaN\tab 7.895800\tab NaN\tab NaN\tab NaN\tab 0.000000\par
+50%\tab 1100.500000\tab 3.000000\tab NaN\tab NaN\tab 24.000000\tab 0.000000\tab 0.000000\tab NaN\tab 14.454200\tab NaN\tab NaN\tab NaN\tab 0.000000\par
+75%\tab 1204.750000\tab 3.000000\tab NaN\tab NaN\tab 35.750000\tab 1.000000\tab 0.000000\tab NaN\tab 31.500000\tab NaN\tab NaN\tab NaN\tab 0.000000\par
+max\tab 1309.000000\tab 3.000000\tab NaN\tab NaN\tab 76.000000\tab 8.000000\tab 9.000000\tab NaN\tab 512.329200\tab NaN\tab NaN\tab NaN\tab 1.000000\par
+add Codeadd Markdown\par
+We have a total of 418 passengers.\par
+1 value from the Fare feature is missing.\par
+Around 20.5% of the Age feature is missing, we will need to fill that in.\par
+add Codeadd Markdown\par
+Cabin Feature\par
+add Codeadd Markdown\par
+#we'll start off by dropping the Cabin feature since not a lot more useful information can be extracted from it.\par
+train = train.drop(['Cabin'], axis = 1)\par
+test = test.drop(['Cabin'], axis = 1)\par
+add Codeadd Markdown\par
+Ticket Feature\par
+add Codeadd Markdown\par
+#we can also drop the Ticket feature since it's unlikely to yield any useful information\par
+train = train.drop(['Ticket'], axis = 1)\par
+test = test.drop(['Ticket'], axis = 1)\par
+add Codeadd Markdown\par
+Embarked Feature\par
+add Codeadd Markdown\par
+#now we need to fill in the missing values in the Embarked feature\par
+print("Number of people embarking in Southampton (S):")\par
+southampton = train[train["Embarked"] == "S"].shape[0]\par
+print(southampton)\par
+\u8203?\par
+print("Number of people embarking in Cherbourg (C):")\par
+cherbourg = train[train["Embarked"] == "C"].shape[0]\par
+print(cherbourg)\par
+\u8203?\par
+print("Number of people embarking in Queenstown (Q):")\par
+queenstown = train[train["Embarked"] == "Q"].shape[0]\par
+print(queenstown)\par
+Number of people embarking in Southampton (S):\par
+644\par
+Number of people embarking in Cherbourg (C):\par
+168\par
+Number of people embarking in Queenstown (Q):\par
+77\par
+add Codeadd Markdown\par
+It's clear that the majority of people embarked in Southampton (S). Let's go ahead and fill in the missing values with S.\par
+\par
+add Codeadd Markdown\par
+#replacing the missing values in the Embarked feature with S\par
+train = train.fillna(\{"Embarked": "S"\})\par
+add Codeadd Markdown\par
+Age Feature\par
+add Codeadd Markdown\par
+Next we'll fill in the missing values in the Age feature. Since a higher percentage of values are missing, it would be illogical to fill all of them with the same value (as we did with Embarked). Instead, let's try to find a way to predict the missing ages.\par
+\par
+add Codeadd Markdown\par
+#create a combined group of both datasets\par
+combine = [train, test]\par
+\u8203?\par
+#extract a title for each Name in the train and test datasets\par
+for dataset in combine:\par
+    dataset['Title'] = dataset.Name.str.extract(' ([A-Za-z]+)\\.', expand=False)\par
+\u8203?\par
+pd.crosstab(train['Title'], train['Sex'])\par
+Sex\tab female\tab male\par
+Title\tab\tab\par
+Capt\tab 0\tab 1\par
+Col\tab 0\tab 2\par
+Countess\tab 1\tab 0\par
+Don\tab 0\tab 1\par
+Dr\tab 1\tab 6\par
+Jonkheer\tab 0\tab 1\par
+Lady\tab 1\tab 0\par
+Major\tab 0\tab 2\par
+Master\tab 0\tab 40\par
+Miss\tab 182\tab 0\par
+Mlle\tab 2\tab 0\par
+Mme\tab 1\tab 0\par
+Mr\tab 0\tab 517\par
+Mrs\tab 125\tab 0\par
+Ms\tab 1\tab 0\par
+Rev\tab 0\tab 6\par
+Sir\tab 0\tab 1\par
+add Codeadd Markdown\par
+#replace various titles with more common names\par
+for dataset in combine:\par
+    dataset['Title'] = dataset['Title'].replace(['Lady', 'Capt', 'Col',\par
+    'Don', 'Dr', 'Major', 'Rev', 'Jonkheer', 'Dona'], 'Rare')\par
+    \par
+    dataset['Title'] = dataset['Title'].replace(['Countess', 'Lady', 'Sir'], 'Royal')\par
+    dataset['Title'] = dataset['Title'].replace('Mlle', 'Miss')\par
+    dataset['Title'] = dataset['Title'].replace('Ms', 'Miss')\par
+    dataset['Title'] = dataset['Title'].replace('Mme', 'Mrs')\par
+\u8203?\par
+train[['Title', 'Survived']].groupby(['Title'], as_index=False).mean()\par
+Title\tab Survived\par
+0\tab Master\tab 0.575000\par
+1\tab Miss\tab 0.702703\par
+2\tab Mr\tab 0.156673\par
+3\tab Mrs\tab 0.793651\par
+4\tab Rare\tab 0.285714\par
+5\tab Royal\tab 1.000000\par
+add Codeadd Markdown\par
+#map each of the title groups to a numerical value\par
+title_mapping = \{"Mr": 1, "Miss": 2, "Mrs": 3, "Master": 4, "Royal": 5, "Rare": 6\}\par
+for dataset in combine:\par
+    dataset['Title'] = dataset['Title'].map(title_mapping)\par
+    dataset['Title'] = dataset['Title'].fillna(0)\par
+\u8203?\par
+train.head()\par
+PassengerId\tab Survived\tab Pclass\tab Name\tab Sex\tab Age\tab SibSp\tab Parch\tab Fare\tab Embarked\tab AgeGroup\tab CabinBool\tab Title\par
+0\tab 1\tab 0\tab 3\tab Braund, Mr. Owen Harris\tab male\tab 22.0\tab 1\tab 0\tab 7.2500\tab S\tab Student\tab 0\tab 1\par
+1\tab 2\tab 1\tab 1\tab Cumings, Mrs. John Bradley (Florence Briggs Th...\tab female\tab 38.0\tab 1\tab 0\tab 71.2833\tab C\tab Adult\tab 1\tab 3\par
+2\tab 3\tab 1\tab 3\tab Heikkinen, Miss. Laina\tab female\tab 26.0\tab 0\tab 0\tab 7.9250\tab S\tab Young Adult\tab 0\tab 2\par
+3\tab 4\tab 1\tab 1\tab Futrelle, Mrs. Jacques Heath (Lily May Peel)\tab female\tab 35.0\tab 1\tab 0\tab 53.1000\tab S\tab Young Adult\tab 1\tab 3\par
+4\tab 5\tab 0\tab 3\tab Allen, Mr. William Henry\tab male\tab 35.0\tab 0\tab 0\tab 8.0500\tab S\tab Young Adult\tab 0\tab 1\par
+add Codeadd Markdown\par
+The code I used above is from here. Next, we'll try to predict the missing Age values from the most common age for their Title.\par
+\par
+add Codeadd Markdown\par
+# fill missing age with mode age group for each title\par
+mr_age = train[train["Title"] == 1]["AgeGroup"].mode() #Young Adult\par
+miss_age = train[train["Title"] == 2]["AgeGroup"].mode() #Student\par
+mrs_age = train[train["Title"] == 3]["AgeGroup"].mode() #Adult\par
+master_age = train[train["Title"] == 4]["AgeGroup"].mode() #Baby\par
+royal_age = train[train["Title"] == 5]["AgeGroup"].mode() #Adult\par
+rare_age = train[train["Title"] == 6]["AgeGroup"].mode() #Adult\par
+\u8203?\par
+age_title_mapping = \{1: "Young Adult", 2: "Student", 3: "Adult", 4: "Baby", 5: "Adult", 6: "Adult"\}\par
+\u8203?\par
+#I tried to get this code to work with using .map(), but couldn't.\par
+#I've put down a less elegant, temporary solution for now.\par
+#train = train.fillna(\{"Age": train["Title"].map(age_title_mapping)\})\par
+#test = test.fillna(\{"Age": test["Title"].map(age_title_mapping)\})\par
+\u8203?\par
+for x in range(len(train["AgeGroup"])):\par
+    if train["AgeGroup"][x] == "Unknown":\par
+        train["AgeGroup"][x] = age_title_mapping[train["Title"][x]]\par
+        \par
+for x in range(len(test["AgeGroup"])):\par
+    if test["AgeGroup"][x] == "Unknown":\par
+        test["AgeGroup"][x] = age_title_mapping[test["Title"][x]]\par
+add Codeadd Markdown\par
+Now that we've filled in the missing values at least somewhat accurately (I will work on a better way for predicting missing age values), it's time to map each age group to a numerical value.\par
+\par
+add Codeadd Markdown\par
+#map each Age value to a numerical value\par
+age_mapping = \{'Baby': 1, 'Child': 2, 'Teenager': 3, 'Student': 4, 'Young Adult': 5, 'Adult': 6, 'Senior': 7\}\par
+train['AgeGroup'] = train['AgeGroup'].map(age_mapping)\par
+test['AgeGroup'] = test['AgeGroup'].map(age_mapping)\par
+\u8203?\par
+train.head()\par
+\u8203?\par
+#dropping the Age feature for now, might change\par
+train = train.drop(['Age'], axis = 1)\par
+test = test.drop(['Age'], axis = 1)\par
+add Codeadd Markdown\par
+Name Feature\par
+We can drop the name feature now that we've extracted the titles.\par
+\par
+add Codeadd Markdown\par
+#drop the name feature since it contains no more useful information.\par
+train = train.drop(['Name'], axis = 1)\par
+test = test.drop(['Name'], axis = 1)\par
+add Codeadd Markdown\par
+Sex Feature\par
+add Codeadd Markdown\par
+#map each Sex value to a numerical value\par
+sex_mapping = \{"male": 0, "female": 1\}\par
+train['Sex'] = train['Sex'].map(sex_mapping)\par
+test['Sex'] = test['Sex'].map(sex_mapping)\par
+\u8203?\par
+train.head()\par
+PassengerId\tab Survived\tab Pclass\tab Sex\tab SibSp\tab Parch\tab Fare\tab Embarked\tab AgeGroup\tab CabinBool\tab Title\par
+0\tab 1\tab 0\tab 3\tab 0\tab 1\tab 0\tab 7.2500\tab S\tab 4\tab 0\tab 1\par
+1\tab 2\tab 1\tab 1\tab 1\tab 1\tab 0\tab 71.2833\tab C\tab 6\tab 1\tab 3\par
+2\tab 3\tab 1\tab 3\tab 1\tab 0\tab 0\tab 7.9250\tab S\tab 5\tab 0\tab 2\par
+3\tab 4\tab 1\tab 1\tab 1\tab 1\tab 0\tab 53.1000\tab S\tab 5\tab 1\tab 3\par
+4\tab 5\tab 0\tab 3\tab 0\tab 0\tab 0\tab 8.0500\tab S\tab 5\tab 0\tab 1\par
+add Codeadd Markdown\par
+Embarked Feature\par
+add Codeadd Markdown\par
+#map each Embarked value to a numerical value\par
+embarked_mapping = \{"S": 1, "C": 2, "Q": 3\}\par
+train['Embarked'] = train['Embarked'].map(embarked_mapping)\par
+test['Embarked'] = test['Embarked'].map(embarked_mapping)\par
+\u8203?\par
+train.head()\par
+PassengerId\tab Survived\tab Pclass\tab Sex\tab SibSp\tab Parch\tab Fare\tab Embarked\tab AgeGroup\tab CabinBool\tab Title\par
+0\tab 1\tab 0\tab 3\tab 0\tab 1\tab 0\tab 7.2500\tab 1\tab 4\tab 0\tab 1\par
+1\tab 2\tab 1\tab 1\tab 1\tab 1\tab 0\tab 71.2833\tab 2\tab 6\tab 1\tab 3\par
+2\tab 3\tab 1\tab 3\tab 1\tab 0\tab 0\tab 7.9250\tab 1\tab 5\tab 0\tab 2\par
+3\tab 4\tab 1\tab 1\tab 1\tab 1\tab 0\tab 53.1000\tab 1\tab 5\tab 1\tab 3\par
+4\tab 5\tab 0\tab 3\tab 0\tab 0\tab 0\tab 8.0500\tab 1\tab 5\tab 0\tab 1\par
+add Codeadd Markdown\par
+Fare Feature\par
+It's time separate the fare values into some logical groups as well as filling in the single missing value in the test dataset.\par
+\par
+add Codeadd Markdown\par
+#fill in missing Fare value in test set based on mean fare for that Pclass \par
+for x in range(len(test["Fare"])):\par
+    if pd.isnull(test["Fare"][x]):\par
+        pclass = test["Pclass"][x] #Pclass = 3\par
+        test["Fare"][x] = round(train[train["Pclass"] == pclass]["Fare"].mean(), 4)\par
+        \par
+#map Fare values into groups of numerical values\par
+train['FareBand'] = pd.qcut(train['Fare'], 4, labels = [1, 2, 3, 4])\par
+test['FareBand'] = pd.qcut(test['Fare'], 4, labels = [1, 2, 3, 4])\par
+\u8203?\par
+#drop Fare values\par
+train = train.drop(['Fare'], axis = 1)\par
+test = test.drop(['Fare'], axis = 1)\par
+add Codeadd Markdown\par
+#check train data\par
+train.head()\par
+PassengerId\tab Survived\tab Pclass\tab Sex\tab SibSp\tab Parch\tab Embarked\tab AgeGroup\tab CabinBool\tab Title\tab FareBand\par
+0\tab 1\tab 0\tab 3\tab 0\tab 1\tab 0\tab 1\tab 4\tab 0\tab 1\tab 1\par
+1\tab 2\tab 1\tab 1\tab 1\tab 1\tab 0\tab 2\tab 6\tab 1\tab 3\tab 4\par
+2\tab 3\tab 1\tab 3\tab 1\tab 0\tab 0\tab 1\tab 5\tab 0\tab 2\tab 2\par
+3\tab 4\tab 1\tab 1\tab 1\tab 1\tab 0\tab 1\tab 5\tab 1\tab 3\tab 4\par
+4\tab 5\tab 0\tab 3\tab 0\tab 0\tab 0\tab 1\tab 5\tab 0\tab 1\tab 2\par
+add Codeadd Markdown\par
+#check test data\par
+test.head()\par
+PassengerId\tab Pclass\tab Sex\tab SibSp\tab Parch\tab Embarked\tab AgeGroup\tab CabinBool\tab Title\tab FareBand\par
+0\tab 892\tab 3\tab 0\tab 0\tab 0\tab 3\tab 5\tab 0\tab 1\tab 1\par
+1\tab 893\tab 3\tab 1\tab 1\tab 0\tab 1\tab 6\tab 0\tab 3\tab 1\par
+2\tab 894\tab 2\tab 0\tab 0\tab 0\tab 3\tab 7\tab 0\tab 1\tab 2\par
+3\tab 895\tab 3\tab 0\tab 0\tab 0\tab 1\tab 5\tab 0\tab 1\tab 2\par
+4\tab 896\tab 3\tab 1\tab 1\tab 1\tab 1\tab 4\tab 0\tab 3\tab 2\par
+add Codeadd Markdown\par
+6) Choosing the Best Model\par
+add Codeadd Markdown\par
+Splitting the Training Data\par
+We will use part of our training data (22% in this case) to test the accuracy of our different models.\par
+\par
+add Codeadd Markdown\par
+from sklearn.model_selection import train_test_split\par
+\u8203?\par
+predictors = train.drop(['Survived', 'PassengerId'], axis=1)\par
+target = train["Survived"]\par
+x_train, x_val, y_train, y_val = train_test_split(predictors, target, test_size = 0.22, random_state = 0)\par
+add Codeadd Markdown\par
+Testing Different Models\par
+I will be testing the following models with my training data (got the list from here):\par
+\par
+Gaussian Naive Bayes\par
+Logistic Regression\par
+Support Vector Machines\par
+Perceptron\par
+Decision Tree Classifier\par
+Random Forest Classifier\par
+KNN or k-Nearest Neighbors\par
+Stochastic Gradient Descent\par
+Gradient Boosting Classifier\par
+For each model, we set the model, fit it with 80% of our training data, predict for 20% of the training data and check the accuracy.\par
+\par
+add Codeadd Markdown\par
+# Gaussian Naive Bayes\par
+from sklearn.naive_bayes import GaussianNB\par
+from sklearn.metrics import accuracy_score\par
+\u8203?\par
+gaussian = GaussianNB()\par
+gaussian.fit(x_train, y_train)\par
+y_pred = gaussian.predict(x_val)\par
+acc_gaussian = round(accuracy_score(y_pred, y_val) * 100, 2)\par
+print(acc_gaussian)\par
+78.68\par
+add Codeadd Markdown\par
+# Logistic Regression\par
+from sklearn.linear_model import LogisticRegression\par
+\u8203?\par
+logreg = LogisticRegression()\par
+logreg.fit(x_train, y_train)\par
+y_pred = logreg.predict(x_val)\par
+acc_logreg = round(accuracy_score(y_pred, y_val) * 100, 2)\par
+print(acc_logreg)\par
+79.19\par
+add Codeadd Markdown\par
+# Support Vector Machines\par
+from sklearn.svm import SVC\par
+\u8203?\par
+svc = SVC()\par
+svc.fit(x_train, y_train)\par
+y_pred = svc.predict(x_val)\par
+acc_svc = round(accuracy_score(y_pred, y_val) * 100, 2)\par
+print(acc_svc)\par
+82.74\par
+add Codeadd Markdown\par
+# Linear SVC\par
+from sklearn.svm import LinearSVC\par
+\u8203?\par
+linear_svc = LinearSVC()\par
+linear_svc.fit(x_train, y_train)\par
+y_pred = linear_svc.predict(x_val)\par
+acc_linear_svc = round(accuracy_score(y_pred, y_val) * 100, 2)\par
+print(acc_linear_svc)\par
+78.17\par
+add Codeadd Markdown\par
+# Perceptron\par
+from sklearn.linear_model import Perceptron\par
+\u8203?\par
+perceptron = Perceptron()\par
+perceptron.fit(x_train, y_train)\par
+y_pred = perceptron.predict(x_val)\par
+acc_perceptron = round(accuracy_score(y_pred, y_val) * 100, 2)\par
+print(acc_perceptron)\par
+79.19\par
+add Codeadd Markdown\par
+#Decision Tree\par
+from sklearn.tree import DecisionTreeClassifier\par
+\u8203?\par
+decisiontree = DecisionTreeClassifier()\par
+decisiontree.fit(x_train, y_train)\par
+y_pred = decisiontree.predict(x_val)\par
+acc_decisiontree = round(accuracy_score(y_pred, y_val) * 100, 2)\par
+print(acc_decisiontree)\par
+80.71\par
+add Codeadd Markdown\par
+# Random Forest\par
+from sklearn.ensemble import RandomForestClassifier\par
+\u8203?\par
+randomforest = RandomForestClassifier()\par
+randomforest.fit(x_train, y_train)\par
+y_pred = randomforest.predict(x_val)\par
+acc_randomforest = round(accuracy_score(y_pred, y_val) * 100, 2)\par
+print(acc_randomforest)\par
+82.74\par
+add Codeadd Markdown\par
+# KNN or k-Nearest Neighbors\par
+from sklearn.neighbors import KNeighborsClassifier\par
+\u8203?\par
+knn = KNeighborsClassifier()\par
+knn.fit(x_train, y_train)\par
+y_pred = knn.predict(x_val)\par
+acc_knn = round(accuracy_score(y_pred, y_val) * 100, 2)\par
+print(acc_knn)\par
+77.66\par
+add Codeadd Markdown\par
+# Stochastic Gradient Descent\par
+from sklearn.linear_model import SGDClassifier\par
+\u8203?\par
+sgd = SGDClassifier()\par
+sgd.fit(x_train, y_train)\par
+y_pred = sgd.predict(x_val)\par
+acc_sgd = round(accuracy_score(y_pred, y_val) * 100, 2)\par
+print(acc_sgd)\par
+76.14\par
+add Codeadd Markdown\par
+# Gradient Boosting Classifier\par
+from sklearn.ensemble import GradientBoostingClassifier\par
+\u8203?\par
+gbk = GradientBoostingClassifier()\par
+gbk.fit(x_train, y_train)\par
+y_pred = gbk.predict(x_val)\par
+acc_gbk = round(accuracy_score(y_pred, y_val) * 100, 2)\par
+print(acc_gbk)\par
+84.77\par
+add Codeadd Markdown\par
+Let's compare the accuracies of each model!\par
+\par
+add Codeadd Markdown\par
+models = pd.DataFrame(\{\par
+    'Model': ['Support Vector Machines', 'KNN', 'Logistic Regression', \par
+              'Random Forest', 'Naive Bayes', 'Perceptron', 'Linear SVC', \par
+              'Decision Tree', 'Stochastic Gradient Descent', 'Gradient Boosting Classifier'],\par
+    'Score': [acc_svc, acc_knn, acc_logreg, \par
+              acc_randomforest, acc_gaussian, acc_perceptron,acc_linear_svc, acc_decisiontree,\par
+              acc_sgd, acc_gbk]\})\par
+models.sort_values(by='Score', ascending=False)\par
+Model\tab Score\par
+9\tab Gradient Boosting Classifier\tab 84.77\par
+0\tab Support Vector Machines\tab 82.74\par
+3\tab Random Forest\tab 82.74\par
+7\tab Decision Tree\tab 80.71\par
+2\tab Logistic Regression\tab 79.19\par
+5\tab Perceptron\tab 79.19\par
+4\tab Naive Bayes\tab 78.68\par
+6\tab Linear SVC\tab 78.17\par
+1\tab KNN\tab 77.66\par
+8\tab Stochastic Gradient Descent\tab 76.14\par
+add Codeadd Markdown\par
+I decided to use the Gradient Boosting Classifier model for the testing data.\par
+\par
+add Codeadd Markdown\par
+7) Creating Submission File\par
+It's time to create a submission.csv file to upload to the Kaggle competition!\par
+\par
+add Codeadd Markdown\par
+Type Markdown and LaTeX:  \f1\lang1032\'e12 \par
+add Codeadd Markdown\par
+#set ids as PassengerId and predict survival \par
+ids = test['PassengerId']\par
+predictions = gbk.predict(test.drop('PassengerId', axis=1))\par
+\par
+#set the output as a dataframe and convert to csv file named submission.csv\par
+output = pd.DataFrame(\{ 'PassengerId' : ids, 'Survived': predictions \})\par
+output.to_csv('submission.csv', index=False)\par
+#set ids as PassengerId and predict survival \par
+ids = test['PassengerId']\par
+predictions = gbk.predict(test.drop('PassengerId', axis=1))\par
+\u8203?\par
+#set the output as a dataframe and convert to csv file named submission.csv\par
+output = pd.DataFrame(\{ 'PassengerId' : ids, 'Survived': predictions \})\par
+output.to_csv('submission.csv', index=False)\par
+add Codeadd Markdown\par
+If you've come this far, congratulations and thank you for reading!\par
+\par
+If you use any part of this notebook in a published kernel, credit (you can simply link back here) would be greatly appreciated. :)\f0\lang9\par
+}
+ 
